@@ -4,20 +4,29 @@ import os
 import logging
 from pathlib import Path
 from typing import Type, Any
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
+
 class DynamicMCP:
-    def __init__(self, 
-                 tools_dir: str = "tools", 
-                 resources_dir: str = "resources", 
-                 prompts_dir: str = "prompts") -> None:
-        self.mcp: FastMCP = FastMCP()
+    def __init__(
+        self,
+        tools_dir: str = "tools",
+        resources_dir: str = "resources",
+        prompts_dir: str = "prompts",
+    ) -> None:
+        self.mcp: FastMCP = FastMCP(
+            name="ynu-mcp",
+            host=os.getenv("MCP_SERVER_HOST", "0.0.0.0"),
+            port=int(os.getenv("MCP_SERVER_PORT", 8000)),
+        )
         self.tools_dir: str = tools_dir
         self.resources_dir: str = resources_dir
         self.prompts_dir: str = prompts_dir
@@ -52,11 +61,15 @@ class DynamicMCP:
     def run(self) -> None:
         """Start the MCP server"""
         logger.info("Starting MCP server")
-        self.mcp.run(transport="sse")
+        self.mcp.run(
+            transport="sse" if os.getenv("MCP_TRANSPORT_TYPE") == "sse" else "stdio"
+        )
+
 
 def main() -> None:
     server: DynamicMCP = DynamicMCP()
     server.run()
+
 
 if __name__ == "__main__":
     main()

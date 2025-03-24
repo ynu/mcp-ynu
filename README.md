@@ -93,6 +93,14 @@ server = DynamicMCP(
 )
 ```
 
+## Debugging
+
+1. Update `MCP_TRANSPORT_TYPE` in `.env`, Execute `python main.py` to start the mcp server
+2. Execute `npx @modelcontextprotocol/inspector` to open the [inspect](http://localhost:5173/).
+3. Choose `SSE` Transport Type with URL `http://localhost:<mcp_server_port>/sse` or Choose `STDIO` Transport Type with Command `python` and Arguments `/path/to/main.py`
+
+![@modelcontextprotocol/inspector](inspect.png)
+
 ## Requirements
 
 - Python >= 3.13
