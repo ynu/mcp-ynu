@@ -1,32 +1,22 @@
-from mcp.server.fastmcp import Context, FastMCP
 import importlib
 import os
-import logging
 from pathlib import Path
 from typing import Type, Any
 from dotenv import load_dotenv
+from mcp_server import mcp
+from logger import get_logger
+
+logger = get_logger(__name__)
 
 load_dotenv()
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
-
-
-class DynamicMCP:
+class MCPLoader:
     def __init__(
         self,
         tools_dir: str = "tools",
         resources_dir: str = "resources",
         prompts_dir: str = "prompts",
     ) -> None:
-        self.mcp: FastMCP = FastMCP(
-            name="ynu-mcp",
-            host=os.getenv("MCP_SERVER_HOST", "0.0.0.0"),
-            port=int(os.getenv("MCP_SERVER_PORT", 8000)),
-        )
         self.tools_dir: str = tools_dir
         self.resources_dir: str = resources_dir
         self.prompts_dir: str = prompts_dir
@@ -51,24 +41,18 @@ class DynamicMCP:
 
             module_name: str = f"{directory}.{module_file.stem}"
             try:
-                module: Any = importlib.import_module(module_name)
-                if hasattr(module, "register"):
-                    module.register(self.mcp)
-                    logger.info(f"Successfully loaded {module_type}: {module_name}")
+                importlib.import_module(module_name)
+                logger.info(f"Successfully loaded {module_type}: {module_name}")
             except Exception as e:
                 logger.error(f"Failed to load {module_type} {module_name}: {str(e)}")
 
-    def run(self) -> None:
-        """Start the MCP server"""
-        logger.info("Starting MCP server")
-        self.mcp.run(
-            transport="sse" if os.getenv("MCP_TRANSPORT_TYPE") == "sse" else "stdio"
-        )
-
 
 def main() -> None:
-    server: DynamicMCP = DynamicMCP()
-    server.run()
+    # Load modules from configured directories
+    MCPLoader()
+    # Start the MCP server
+    logger.info(f"Starting MCP server with transport type: {os.getenv('MCP_TRANSPORT_TYPE')} with host: {os.getenv('MCP_SERVER_HOST')} and port: {os.getenv('MCP_SERVER_PORT')}")
+    mcp.run(transport="sse" if os.getenv("MCP_TRANSPORT_TYPE") == "sse" else "stdio")
 
 
 if __name__ == "__main__":

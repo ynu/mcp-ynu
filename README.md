@@ -24,14 +24,16 @@ A dynamic MCP server implementation using FastMCP that automatically loads tools
 mcp-ynu/
 ├── tools/          # Directory for tool modules
 │   ├── __init__.py
-│   ├── example_tool.py
+│   ├── example.py
 ├── resources/      # Directory for resource modules
 │   ├── __init__.py
-│   ├── example_resource.py
+│   ├── example.py
 ├── prompts/        # Directory for prompt modules
 │   ├── __init__.py
-│   ├── example_prompt.py
-├── main.py         # Main server implementation
+│   ├── example.py
+├── logger.py       # Logger implementation
+├── main.py         # Main implementation
+├── mcp_server.py   # MCP server implementation
 ├── README.md       # Project documentation
 ├── LICENSE         # MIT License
 └── pyproject.toml  # Project configuration
@@ -40,7 +42,7 @@ mcp-ynu/
 ## Usage
 
 1. Create modules in the appropriate directories
-2. Implement a `register(mcp: FastMCP)` function in each module
+2. Import mcp via `from mcp_server import mcp` 
 3. Run the server:
 
 ```bash
@@ -49,48 +51,58 @@ python main.py
 
 ## Example Modules
 
-### Tools Module Example (tools/example_tool.py)
+### Tools Module Example (tools/example.py)
 ```python
-from mcp.server.fastmcp import FastMCP
-from typing import Callable
+from mcp_server import mcp
+import httpx
 
-def register(mcp: FastMCP) -> None:
-    @mcp.tool("example_tool")
-    def example_tool() -> str:
-        return "This is an example tool"
+@mcp.tool()
+def calculate_bmi(weight_kg: float, height_m: float) -> float:
+    """Calculate BMI given weight in kg and height in meters"""
+    return weight_kg / (height_m**2)
+
+
+@mcp.tool()
+async def fetch_weather(city: str) -> str:
+    """Fetch current weather for a city"""
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"https://api.weather.com/{city}")
+        return response.text
 ```
 
-### Resources Module Example (resources/example_resource.py)
+### Resources Module Example (resources/example.py)
 ```python
-from mcp.server.fastmcp import FastMCP
-from typing import Callable
+from mcp_server import mcp
 
-def register(mcp: FastMCP) -> None:
-    @mcp.resource("example_resource")
-    def example_resource() -> str:
-        return "This is an example resource"
+@mcp.resource("config://app")
+def get_config() -> str:
+    """Static configuration data"""
+    return "App configuration here"
+
+
+@mcp.resource("users://{user_id}/profile")
+def get_user_profile(user_id: str) -> str:
+    """Dynamic user data"""
+    return f"Profile data for user {user_id}"
 ```
 
-### Prompts Module Example (prompts/example_prompt.py)
+### Prompts Module Example (prompts/example.py)
 ```python
-from mcp.server.fastmcp import FastMCP
-from typing import Callable
+from mcp_server import mcp
+from mcp.server.fastmcp.prompts import base
 
-def register(mcp: FastMCP) -> None:
-    @mcp.prompt("example_prompt")
-    def example_prompt() -> str:
-        return "This is an example prompt"
-```
+@mcp.prompt()
+def review_code(code: str) -> str:
+    return f"Please review this code:\n\n{code}"
 
-## Configuration
 
-Configure directories in `main.py`:
-```python
-server = DynamicMCP(
-    tools_dir="custom_tools",
-    resources_dir="custom_resources",
-    prompts_dir="custom_prompts"
-)
+@mcp.prompt()
+def debug_error(error: str) -> list[base.Message]:
+    return [
+        base.UserMessage("I'm seeing this error:"),
+        base.UserMessage(error),
+        base.AssistantMessage("I'll help debug that. What have you tried so far?"),
+    ]
 ```
 
 ## Debugging
