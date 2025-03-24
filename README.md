@@ -103,7 +103,7 @@ server = DynamicMCP(
 
 ## Requirements
 
-- Python >= 3.13
+- Python >= 3.10
 - FastMCP
 
 ## Reference Links
