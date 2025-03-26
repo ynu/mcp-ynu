@@ -30,7 +30,8 @@ class MCPLoader:
 
     def _load_from_directory(self, directory: str, module_type: str) -> None:
         """Load modules from a specific directory"""
-        path = Path(directory)
+        base_dir = Path(__file__).parent   
+        path = Path(base_dir / directory)
         if not path.exists():
             logger.warning(f"Directory {directory} does not exist")
             return
