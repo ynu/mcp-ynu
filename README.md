@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/ynu-mcp-ynu-badge.png)](https://mseep.ai/app/ynu-mcp-ynu)
+
 # MCP-YNU - FastMCP Server
 
 A dynamic MCP server implementation using FastMCP that automatically loads tools, resources, and prompts from respective directories.
