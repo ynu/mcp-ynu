@@ -10,6 +10,7 @@ logger = get_logger(__name__)
 
 load_dotenv()
 
+
 class MCPLoader:
     def __init__(
         self,
@@ -30,7 +31,7 @@ class MCPLoader:
 
     def _load_from_directory(self, directory: str, module_type: str) -> None:
         """Load modules from a specific directory"""
-        base_dir = Path(__file__).parent   
+        base_dir = Path(__file__).parent
         path = Path(base_dir / directory)
         if not path.exists():
             logger.warning(f"Directory {directory} does not exist")
@@ -53,7 +54,16 @@ def main() -> None:
     MCPLoader()
     # Start the MCP server
     logger.info(f"Starting MCP server with transport type: {os.getenv('MCP_TRANSPORT_TYPE')} with host: {os.getenv('MCP_SERVER_HOST')} and port: {os.getenv('MCP_SERVER_PORT')}")
-    mcp.run(transport="sse" if os.getenv("MCP_TRANSPORT_TYPE") == "sse" else "stdio")
+    mcp.run(
+        transport=(
+            os.getenv("MCP_TRANSPORT_TYPE")
+            if os.getenv("MCP_TRANSPORT_TYPE")
+            else "http"
+        ),
+        host=os.getenv("MCP_SERVER_HOST", "0.0.0.0"),
+        port=int(os.getenv("MCP_SERVER_PORT", 8000)),
+        log_level="DEBUG",
+    )
 
 
 if __name__ == "__main__":
